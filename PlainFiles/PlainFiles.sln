@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasicTestFile", "BasicTestF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggingWithStreamWriter", "LoggingWithStreamWriter\LoggingWithStreamWriter.csproj", "{4CB7AF74-A764-4B9A-BBEA-AD808D408627}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CVSWithoutLibraries", "CVSWithoutLibraries\CVSWithoutLibraries.csproj", "{FC46556E-7E3D-4A86-8AD2-D99042520283}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{4CB7AF74-A764-4B9A-BBEA-AD808D408627}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4CB7AF74-A764-4B9A-BBEA-AD808D408627}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4CB7AF74-A764-4B9A-BBEA-AD808D408627}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC46556E-7E3D-4A86-8AD2-D99042520283}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC46556E-7E3D-4A86-8AD2-D99042520283}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC46556E-7E3D-4A86-8AD2-D99042520283}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC46556E-7E3D-4A86-8AD2-D99042520283}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
