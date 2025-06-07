@@ -1,6 +1,4 @@
-﻿// Versión simplificada del proyecto CVSWithLibrary
-using CVSWithLibrary;
-using System.Text;
+﻿using CVSWithLibrary;
 
 var usuarios = CargarUsuarios("Users.txt");
 var usuarioActivo = AutenticarUsuario(usuarios);
@@ -104,27 +102,30 @@ do
             break;
 
         case "6":
-            Log("INFO", "City report");
-            decimal total = 0;
-            foreach (var grupo in personas.GroupBy(p => p.City))
-            {
-                Console.WriteLine($"\nCiudad: {grupo.Key}\n");
-                Console.WriteLine("ID  Nombres       Apellidos     Saldo");
-                Console.WriteLine("--  ------------- ------------- ----------");
+            decimal totalGeneral = 0;
+            var personasPorCiudad = personas.GroupBy(p => p.City);
 
-                decimal sub = 0;
+            foreach (var grupo in personasPorCiudad)
+            {
+                Console.WriteLine($"Ciudad: {grupo.Key}\n");
+
+                Console.WriteLine("ID\tNombres\t\tApellidos\t\tSaldo");
+                Console.WriteLine("—\t—-------------\t—------------\t—-----------------");
+
+                decimal subtotal = 0;
                 foreach (var p in grupo)
                 {
-                    Console.WriteLine($"{p.Id,-3}{p.FirstName,-14}{p.LastName,-14}{p.Balance,10:N2}");
-                    sub += p.Balance;
+                    Console.WriteLine($"{p.Id}\t{p.FirstName,-12}\t{p.LastName,-12}\t{p.Balance,15:N2}\n");
+                    subtotal += p.Balance;
                 }
 
-                Console.WriteLine("=======");
-                Console.WriteLine($"Total: {grupo.Key}: {sub:N2}\n");
-                total += sub;
+                Console.WriteLine($"\t\t\t\t\t\t===============");
+                Console.WriteLine($"Total: {grupo.Key,-20}\t{subtotal,15:N2}\n");
+                totalGeneral += subtotal;
             }
-            Console.WriteLine("=======");
-            Console.WriteLine("Total General: " + total.ToString("N2"));
+
+            Console.WriteLine("\t\t\t\t\t\t===============");
+            Console.WriteLine($"Total General:\t\t\t\t{totalGeneral,15:N2}\n");
             break;
     }
 } while (opcion != "0");
