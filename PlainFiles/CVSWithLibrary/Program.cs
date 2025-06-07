@@ -110,22 +110,22 @@ do
                 Console.WriteLine($"Ciudad: {grupo.Key}\n");
 
                 Console.WriteLine("ID\tNombres\t\tApellidos\t\tSaldo");
-                Console.WriteLine("—\t—-------------\t—------------\t—-----------------");
+                Console.WriteLine("—\t—-------------\t—------------\t—----------");
 
                 decimal subtotal = 0;
                 foreach (var p in grupo)
                 {
-                    Console.WriteLine($"{p.Id}\t{p.FirstName,-12}\t{p.LastName,-12}\t{p.Balance,15:N2}\n");
+                    Console.WriteLine($"{p.Id}\t{p.FirstName,-12}\t{p.LastName,-12}\t{p.Balance,10:N2}\n");
                     subtotal += p.Balance;
                 }
 
-                Console.WriteLine($"\t\t\t\t\t\t===============");
-                Console.WriteLine($"Total: {grupo.Key,-20}\t{subtotal,15:N2}\n");
+                Console.WriteLine("\t\t\t\t===============");
+                Console.WriteLine($"Total: {grupo.Key,-10}\t\t\t{subtotal,10:N2}\n");
                 totalGeneral += subtotal;
             }
 
-            Console.WriteLine("\t\t\t\t\t\t===============");
-            Console.WriteLine($"Total General:\t\t\t\t{totalGeneral,15:N2}\n");
+            Console.WriteLine("\t\t\t\t===============");
+            Console.WriteLine($"Total General:\t\t\t{totalGeneral,10:N2}\n");
             break;
     }
 } while (opcion != "0");
