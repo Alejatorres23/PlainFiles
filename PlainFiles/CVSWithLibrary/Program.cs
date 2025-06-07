@@ -22,25 +22,17 @@ string option;
 do
 {
     option = ShowMenu();
-    auth.WriteLog("INFO", $"Option selected: {option}", activeUser);
 
     switch (option)
     {
         case "1":
-            Console.WriteLine("==========================");
-            if (!people.Any())
+            Console.WriteLine("==============================");
+            foreach (var p in people.OrderBy(p => p.Id))
             {
-                Console.WriteLine("No records found.");
-                break;
-            }
-
-            foreach (var p in people)
-            {
-                Console.WriteLine($"{p.Id}");
-                Console.WriteLine($"\t{p.FirstName} {p.LastName}");
-                Console.WriteLine($"\tPhone: {FormatPhone(p.Phone)}");
-                Console.WriteLine($"\tCity: {p.City}");
-                Console.WriteLine($"\tBalance: {p.Balance,20:C2}\n");
+                Console.WriteLine($"{p.Id,2}  {p.FirstName} {p.LastName}");
+                Console.WriteLine($"     Phone: {FormatPhone(p.Phone)}");
+                Console.WriteLine($"     City: {p.City}");
+                Console.WriteLine($"     Balance: {p.Balance,20:C2}\n");
             }
             break;
 
@@ -150,49 +142,49 @@ do
             break;
 
         case "6":
-            auth.WriteLog("INFO", "Generar informe por ciudad", activeUser);
             Console.Clear();
+            var col1 = "ID";
+            var col2 = "Nombres";
+            var col3 = "Apellidos";
+            var col4 = "Saldo";
 
-            var peopleByCity = people
-                .GroupBy(p => p.City)
-                .OrderBy(g => g.Key);
+            var idWidth = 4;
+            var nameWidth = 10;
+            var lastWidth = 10;
+            var saldoWidth = 15;
 
-            string col1 = "ID";
-            string col2 = "Nombres";
-            string col3 = "Apellidos";
-            string col4 = "Saldo";
+            string FormatSaldo(decimal value)
+            {
+                var formatted = value.ToString("N2");
+                return formatted.Length > saldoWidth ? formatted[^saldoWidth..] : formatted.PadLeft(saldoWidth);
+            }
 
-            int idWidth = col1.Length;
-            int nameWidth = Math.Max(8, people.Max(p => p.FirstName.Length));
-            int lastWidth = Math.Max(9, people.Max(p => p.LastName.Length));
-            int balanceWidth = 15;
-
+            var peopleByCity = people.OrderBy(p => p.Id).GroupBy(p => p.City).OrderBy(g => g.Key);
             decimal totalGeneral = 0;
 
             foreach (var group in peopleByCity)
             {
                 Console.WriteLine($"Ciudad: {group.Key}\n");
 
-                Console.WriteLine($"{col1.PadRight(idWidth)} {col2.PadRight(nameWidth)} {col3.PadRight(lastWidth)} {col4.PadLeft(balanceWidth)}");
-                Console.WriteLine($"{new string('—', idWidth)} {new string('—', nameWidth)} {new string('—', lastWidth)} {new string('—', balanceWidth)}");
+                Console.WriteLine($"{col1.PadRight(idWidth)} {col2.PadRight(nameWidth)} {col3.PadRight(lastWidth)} {col4.PadLeft(saldoWidth)}");
+                Console.WriteLine($"{new string('-', idWidth)} {new string('-', nameWidth)} {new string('-', lastWidth)} {new string('-', saldoWidth)}");
 
                 decimal subtotal = 0;
+
                 foreach (var p in group)
                 {
-                    Console.WriteLine($"{p.Id.ToString().PadRight(idWidth)} {p.FirstName.PadRight(nameWidth)} {p.LastName.PadRight(lastWidth)} {p.Balance.ToString("N2").PadLeft(balanceWidth)}");
+                    Console.WriteLine($"{p.Id.ToString().PadRight(idWidth)} {p.FirstName.PadRight(nameWidth)} {p.LastName.PadRight(lastWidth)} {FormatSaldo(p.Balance)}");
                     subtotal += p.Balance;
                 }
 
-                // Línea doble y total alineado a saldo
-                Console.WriteLine($"{new string(' ', idWidth + nameWidth + lastWidth + 3)}{new string('=', balanceWidth)}");
-                Console.WriteLine($"{("Total: " + group.Key).PadRight(idWidth + nameWidth + lastWidth + 3)}{subtotal.ToString("N2").PadLeft(balanceWidth)}\n");
+                Console.WriteLine($"{new string(' ', idWidth + nameWidth + lastWidth + 3)}{new string('=', saldoWidth)}");
+                Console.WriteLine($"Total: {group.Key.PadRight(idWidth + nameWidth + lastWidth + 3)}{FormatSaldo(subtotal).PadLeft(saldoWidth)}\n");
 
                 totalGeneral += subtotal;
             }
 
-            // Línea doble y total general final alineado
-            Console.WriteLine($"{new string(' ', idWidth + nameWidth + lastWidth + 3)}{new string('=', balanceWidth)}");
-            Console.WriteLine($"{("Total General:").PadRight(idWidth + nameWidth + lastWidth + 3)}{totalGeneral.ToString("N2").PadLeft(balanceWidth)}\n");
+            Console.WriteLine($"{new string(' ', idWidth + nameWidth + lastWidth + 3)}{new string('=', saldoWidth)}");
+            Console.WriteLine($"Total General:{"".PadRight(idWidth + nameWidth + lastWidth - 6)}{FormatSaldo(totalGeneral).PadLeft(saldoWidth)}\n");
             break;
 
         case "0":
@@ -200,21 +192,25 @@ do
             Console.WriteLine("Changes saved before exiting. Goodbye!");
             break;
     }
+
 } while (option != "0");
 
 string ShowMenu()
 {
-    Console.WriteLine("\n====== MAIN MENU ======");
-    Console.WriteLine("1. View people\n2. Add\n3. Save\n4. Edit\n5. Delete\n6. Report\n0. Exit");
-    Console.Write("Select: ");
+    Console.WriteLine("\n==============================");
+    Console.WriteLine("1. Show content");
+    Console.WriteLine("2. Add person");
+    Console.WriteLine("3. Save changes");
+    Console.WriteLine("4. Edit person");
+    Console.WriteLine("5. Delete person");
+    Console.WriteLine("6. Report");
+    Console.WriteLine("0. Exit");
+    Console.Write("Choose an option: ");
     return Console.ReadLine() ?? "0";
 }
 
 string FormatPhone(string phone)
 {
     var digits = new string(phone.Where(char.IsDigit).ToArray());
-    if (digits.Length == 10)
-        return $"{digits[..3]} {digits[3..6]} {digits[6..]}";
-    else
-        return phone;
+    return digits.Length == 10 ? $"{digits[..3]} {digits[3..6]} {digits[6..]}" : phone;
 }
