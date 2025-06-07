@@ -157,31 +157,42 @@ do
                 .GroupBy(p => p.City)
                 .OrderBy(g => g.Key);
 
-            decimal total = 0;
+            string col1 = "ID";
+            string col2 = "Nombres";
+            string col3 = "Apellidos";
+            string col4 = "Saldo";
+
+            int idWidth = col1.Length;
+            int nameWidth = Math.Max(8, people.Max(p => p.FirstName.Length));
+            int lastWidth = Math.Max(9, people.Max(p => p.LastName.Length));
+            int balanceWidth = 15;
+
+            decimal totalGeneral = 0;
 
             foreach (var group in peopleByCity)
             {
                 Console.WriteLine($"Ciudad: {group.Key}\n");
 
-                Console.WriteLine($"{"ID",-4} {"Nombres",-10} {"Apellidos",-12} {"Saldo",15}");
-                Console.WriteLine($"{new string('-', 4)} {new string('-', 10)} {new string('-', 12)} {new string('-', 15)}");
+                Console.WriteLine($"{col1.PadRight(idWidth)} {col2.PadRight(nameWidth)} {col3.PadRight(lastWidth)} {col4.PadLeft(balanceWidth)}");
+                Console.WriteLine($"{new string('—', idWidth)} {new string('—', nameWidth)} {new string('—', lastWidth)} {new string('—', balanceWidth)}");
 
                 decimal subtotal = 0;
-
                 foreach (var p in group)
                 {
-                    Console.WriteLine($"{p.Id,-4} {p.FirstName,-10} {p.LastName,-12} {p.Balance,15:N2}");
+                    Console.WriteLine($"{p.Id.ToString().PadRight(idWidth)} {p.FirstName.PadRight(nameWidth)} {p.LastName.PadRight(lastWidth)} {p.Balance.ToString("N2").PadLeft(balanceWidth)}");
                     subtotal += p.Balance;
                 }
 
-                Console.WriteLine($"{new string(' ', 30)}{"=======".PadLeft(15)}");
-                Console.WriteLine($"Total: {group.Key,-22} {subtotal,15:N2}\n");
+                // Línea doble y total alineado a saldo
+                Console.WriteLine($"{new string(' ', idWidth + nameWidth + lastWidth + 3)}{new string('=', balanceWidth)}");
+                Console.WriteLine($"{("Total: " + group.Key).PadRight(idWidth + nameWidth + lastWidth + 3)}{subtotal.ToString("N2").PadLeft(balanceWidth)}\n");
 
-                total += subtotal;
+                totalGeneral += subtotal;
             }
 
-            Console.WriteLine($"{new string(' ', 30)}{"=======".PadLeft(15)}");
-            Console.WriteLine($"Total General:{total,26:N2}\n");
+            // Línea doble y total general final alineado
+            Console.WriteLine($"{new string(' ', idWidth + nameWidth + lastWidth + 3)}{new string('=', balanceWidth)}");
+            Console.WriteLine($"{("Total General:").PadRight(idWidth + nameWidth + lastWidth + 3)}{totalGeneral.ToString("N2").PadLeft(balanceWidth)}\n");
             break;
 
         case "0":
