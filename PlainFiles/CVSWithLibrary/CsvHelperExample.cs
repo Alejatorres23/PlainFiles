@@ -11,6 +11,7 @@ public class CsvHelperExample
         using var cw = new CsvWriter(sw, CultureInfo.InvariantCulture);
         cw.WriteRecords(people);
     }
+
     public IEnumerable<Person> Read(string path)
     {
         if (!File.Exists(path))
