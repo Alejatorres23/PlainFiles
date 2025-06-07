@@ -50,14 +50,18 @@ public class AuthService
     {
         Console.Write("New username: ");
         var username = Console.ReadLine();
+
         if (string.IsNullOrWhiteSpace(username) || users.ContainsKey(username!))
         {
             Console.WriteLine("Invalid or duplicate username.");
+            File.AppendAllText(_logFile, $"[REGISTER FAIL] {DateTime.Now:yyyy-MM-dd HH:mm:ss} - Attempted with username: {username}\n");
             return null;
         }
 
         Console.Write("Password: ");
         var password = Console.ReadLine();
+
+        File.AppendAllText(_logFile, $"[REGISTERED] {DateTime.Now:yyyy-MM-dd HH:mm:ss} - New user registered: {username}\n");
 
         return new User
         {
@@ -98,6 +102,7 @@ public class AuthService
 
                 lastTried = u;
             }
+
             Console.WriteLine("Invalid credentials.");
         }
 
@@ -113,8 +118,11 @@ public class AuthService
                     break;
                 }
             }
+
             File.WriteAllLines(_userFile, lines);
             Console.WriteLine("User has been blocked.");
+
+            File.AppendAllText(_logFile, $"[BLOCKED] {DateTime.Now:yyyy-MM-dd HH:mm:ss} - User blocked after 3 failed attempts: {lastTried}\n");
         }
 
         return null;
