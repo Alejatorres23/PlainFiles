@@ -11,10 +11,4 @@
     <PackageReference Include="CsvHelper" Version="33.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Users.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

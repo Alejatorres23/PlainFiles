@@ -1,12 +1,12 @@
 ﻿using CVSWithLibrary;
 
-var usuarios = CargarUsuarios("Users.txt");
-var usuarioActivo = AutenticarUsuario(usuarios);
-if (usuarioActivo == null)
+var auth = new AuthService();
+var users = auth.LoadUsers();
+var activeUser = auth.ShowInitialMenu(users);
+
+if (activeUser == null)
 {
-    Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine("Access denied. User blocked.");
-    Console.ResetColor();
+    Console.WriteLine("Program terminated.");
     return;
 }
 
@@ -16,210 +16,194 @@ if (!File.Exists("log.txt"))
     File.Create("log.txt").Close();
 
 var helper = new CsvHelperExample();
-var personas = helper.Read("people.csv").ToList();
+var people = helper.Read("people.csv").ToList();
 
-string opcion;
+string option;
 do
 {
-    opcion = Menu();
-    Log("INFO", $"Option selected: {opcion}");
-    Console.WriteLine("==========================");
+    option = ShowMenu();
+    auth.WriteLog("INFO", $"Option selected: {option}", activeUser);
 
-    switch (opcion)
+    switch (option)
     {
         case "1":
-            Log("INFO", "Show content");
-            if (!personas.Any())
+            Console.WriteLine("==========================");
+            if (!people.Any())
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Empty file.");
-                Console.ResetColor();
-                Log("ERROR", "Empty file.");
+                Console.WriteLine("No records found.");
                 break;
             }
-            personas.ForEach(p => Console.WriteLine(p));
+
+            foreach (var p in people)
+            {
+                Console.WriteLine($"{p.Id}");
+                Console.WriteLine($"\t{p.FirstName} {p.LastName}");
+                Console.WriteLine($"\tPhone: {FormatPhone(p.Phone)}");
+                Console.WriteLine($"\tCity: {p.City}");
+                Console.WriteLine($"\tBalance: {p.Balance,20:C2}\n");
+            }
             break;
 
         case "2":
-            Log("INFO", "Add person");
-            Console.Write("ID: ");
-            if (!int.TryParse(Console.ReadLine(), out int id) || personas.Any(p => p.Id == id))
+            Console.Write("Enter ID: ");
+            if (!int.TryParse(Console.ReadLine(), out int id) || people.Any(p => p.Id == id))
             {
-                Log("ERROR", "Invalid ID");
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("ID must be a number and unique.");
-                Console.ResetColor();
+                Console.WriteLine("Invalid or duplicate ID.");
                 break;
             }
-            var persona = CapturarPersona(id);
-            if (persona != null)
-                personas.Add(persona);
+
+            Console.Write("Enter first name: ");
+            var firstName = Console.ReadLine();
+            Console.Write("Enter last name: ");
+            var lastName = Console.ReadLine();
+
+            Console.Write("Enter phone: ");
+            var phone = Console.ReadLine();
+            phone = new string(phone?.Where(char.IsDigit).ToArray());
+
+            Console.Write("Enter city: ");
+            var city = Console.ReadLine();
+
+            Console.Write("Enter balance: ");
+            var balanceInput = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) ||
+                phone.Length != 10 || !phone.All(char.IsDigit) ||
+                !decimal.TryParse(balanceInput, out decimal balance) || balance < 0)
+            {
+                Console.WriteLine("Invalid input. Make sure all fields are correct.");
+                break;
+            }
+
+            people.Add(new Person
+            {
+                Id = id,
+                FirstName = firstName!,
+                LastName = lastName!,
+                Phone = phone!,
+                City = city!,
+                Balance = balance
+            });
+
+            Console.WriteLine("Person added successfully.");
             break;
 
         case "3":
-            Log("INFO", "Save changes");
-            helper.Write("people.csv", personas);
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Changes saved.");
-            Console.ResetColor();
+            helper.Write("people.csv", people);
+            Console.WriteLine("Changes saved successfully.");
             break;
 
         case "4":
-            Log("INFO", "Edit person");
             Console.Write("Enter ID to edit: ");
-            if (int.TryParse(Console.ReadLine(), out int idEdit))
+            if (int.TryParse(Console.ReadLine(), out int editId))
             {
-                var p = personas.FirstOrDefault(x => x.Id == idEdit);
-                if (p != null)
+                var person = people.FirstOrDefault(p => p.Id == editId);
+                if (person != null)
                 {
-                    Console.Write($"First name [{p.FirstName}]: "); var nuevo = Console.ReadLine(); if (!string.IsNullOrWhiteSpace(nuevo)) p.FirstName = nuevo;
-                    Console.Write($"Last name [{p.LastName}]: "); nuevo = Console.ReadLine(); if (!string.IsNullOrWhiteSpace(nuevo)) p.LastName = nuevo;
-                    Console.Write($"Phone [{p.Phone}]: "); nuevo = Console.ReadLine(); if (!string.IsNullOrWhiteSpace(nuevo)) { var tmp = FormatearTelefono(nuevo); if (EsTelefonoValido(tmp)) p.Phone = tmp; }
-                    Console.Write($"City [{p.City}]: "); nuevo = Console.ReadLine(); if (!string.IsNullOrWhiteSpace(nuevo)) p.City = nuevo;
-                    Console.Write($"Balance [{p.Balance}]: "); nuevo = Console.ReadLine(); if (!string.IsNullOrWhiteSpace(nuevo) && decimal.TryParse(nuevo, out var b) && b >= 0) p.Balance = b;
+                    Console.Write($"First name [{person.FirstName}]: ");
+                    var newVal = Console.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(newVal)) person.FirstName = newVal;
+
+                    Console.Write($"Last name [{person.LastName}]: ");
+                    newVal = Console.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(newVal)) person.LastName = newVal;
+
+                    Console.Write($"Phone [{person.Phone}]: ");
+                    newVal = Console.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(newVal))
+                    {
+                        var digits = new string(newVal.Where(char.IsDigit).ToArray());
+                        if (digits.Length == 10) person.Phone = digits;
+                    }
+
+                    Console.Write($"City [{person.City}]: ");
+                    newVal = Console.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(newVal)) person.City = newVal;
+
+                    Console.Write($"Balance [{person.Balance}]: ");
+                    newVal = Console.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(newVal) && decimal.TryParse(newVal, out var newBal) && newBal >= 0)
+                        person.Balance = newBal;
+
+                    Console.WriteLine("Person updated successfully.");
                 }
+                else Console.WriteLine("Person not found.");
             }
             break;
 
         case "5":
-            Log("INFO", "Delete person");
             Console.Write("Enter ID to delete: ");
-            if (int.TryParse(Console.ReadLine(), out int idDel))
+            if (int.TryParse(Console.ReadLine(), out int delId))
             {
-                var p = personas.FirstOrDefault(x => x.Id == idDel);
-                if (p != null)
+                var person = people.FirstOrDefault(p => p.Id == delId);
+                if (person != null)
                 {
-                    Console.Write($"Delete {p.FirstName} {p.LastName}? (Y/N): ");
+                    Console.Write($"Are you sure you want to delete {person.FirstName} {person.LastName}? (Y/N): ");
                     if (Console.ReadLine()?.ToUpper() == "Y")
                     {
-                        personas.Remove(p);
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Deleted.");
-                        Console.ResetColor();
+                        people.Remove(person);
+                        Console.WriteLine("Person deleted successfully.");
                     }
                 }
+                else Console.WriteLine("Person not found.");
             }
             break;
 
         case "6":
-            decimal totalGeneral = 0;
-            var personasPorCiudad = personas.GroupBy(p => p.City);
+            auth.WriteLog("INFO", "Generar informe por ciudad", activeUser);
+            Console.Clear();
 
-            foreach (var grupo in personasPorCiudad)
+            var peopleByCity = people
+                .GroupBy(p => p.City)
+                .OrderBy(g => g.Key);
+
+            decimal total = 0;
+
+            foreach (var group in peopleByCity)
             {
-                Console.WriteLine($"Ciudad: {grupo.Key}\n");
+                Console.WriteLine($"Ciudad: {group.Key}\n");
 
-                Console.WriteLine("ID\tNombres\t\tApellidos\t\tSaldo");
-                Console.WriteLine("—\t—-------------\t—------------\t—----------");
+                Console.WriteLine($"{"ID",-4} {"Nombres",-10} {"Apellidos",-12} {"Saldo",15}");
+                Console.WriteLine($"{new string('-', 4)} {new string('-', 10)} {new string('-', 12)} {new string('-', 15)}");
 
                 decimal subtotal = 0;
-                foreach (var p in grupo)
+
+                foreach (var p in group)
                 {
-                    Console.WriteLine($"{p.Id}\t{p.FirstName,-12}\t{p.LastName,-12}\t{p.Balance,10:N2}\n");
+                    Console.WriteLine($"{p.Id,-4} {p.FirstName,-10} {p.LastName,-12} {p.Balance,15:N2}");
                     subtotal += p.Balance;
                 }
 
-                Console.WriteLine("\t\t\t\t===============");
-                Console.WriteLine($"Total: {grupo.Key,-10}\t\t\t{subtotal,10:N2}\n");
-                totalGeneral += subtotal;
+                Console.WriteLine($"{new string(' ', 30)}{"=======".PadLeft(15)}");
+                Console.WriteLine($"Total: {group.Key,-22} {subtotal,15:N2}\n");
+
+                total += subtotal;
             }
 
-            Console.WriteLine("\t\t\t\t===============");
-            Console.WriteLine($"Total General:\t\t\t{totalGeneral,10:N2}\n");
+            Console.WriteLine($"{new string(' ', 30)}{"=======".PadLeft(15)}");
+            Console.WriteLine($"Total General:{total,26:N2}\n");
+            break;
+
+        case "0":
+            helper.Write("people.csv", people);
+            Console.WriteLine("Changes saved before exiting. Goodbye!");
             break;
     }
-} while (opcion != "0");
+} while (option != "0");
 
-string Menu()
+string ShowMenu()
 {
-    Console.WriteLine("============================");
-    Console.WriteLine("1. View people\n2. Add person\n3. Save changes\n4. Edit person\n5. Delete person\n6. City report");
-    Console.WriteLine("0. Exit\nChoose an option: ");
+    Console.WriteLine("\n====== MAIN MENU ======");
+    Console.WriteLine("1. View people\n2. Add\n3. Save\n4. Edit\n5. Delete\n6. Report\n0. Exit");
+    Console.Write("Select: ");
     return Console.ReadLine() ?? "0";
 }
 
-void Log(string tipo, string mensaje)
+string FormatPhone(string phone)
 {
-    var color = tipo == "ERROR" ? ConsoleColor.Red : ConsoleColor.Blue;
-    Console.ForegroundColor = color;
-    Console.WriteLine($"[{tipo}] {mensaje}");
-    Console.ResetColor();
-    File.AppendAllText("log.txt", $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{tipo}] {usuarioActivo}: {mensaje}\n");
-}
-
-Person? CapturarPersona(int id)
-{
-    Console.Write("First name: "); var nombre = Console.ReadLine();
-    Console.Write("Last name: "); var apellido = Console.ReadLine();
-    Console.Write("Phone: "); var telefono = Console.ReadLine();
-    telefono = FormatearTelefono(telefono);
-    Console.Write("City: "); var ciudad = Console.ReadLine();
-    Console.Write("Balance: "); var saldoInput = Console.ReadLine();
-
-    if (string.IsNullOrWhiteSpace(nombre) || string.IsNullOrWhiteSpace(apellido) ||
-        !EsTelefonoValido(telefono) ||
-        !decimal.TryParse(saldoInput, out decimal saldo) || saldo < 0)
-    {
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("Invalid input. All fields must be completed and valid.\n----------------------------\n");
-        Console.ResetColor();
-        return null;
-    }
-
-    return new Person { Id = id, FirstName = nombre, LastName = apellido, Phone = telefono, City = ciudad, Balance = saldo };
-}
-
-bool EsTelefonoValido(string telefono)
-{
-    string soloDigitos = new string(telefono.Where(char.IsDigit).ToArray());
-    return soloDigitos.Length == 10 && soloDigitos.All(char.IsDigit);
-}
-
-string FormatearTelefono(string telefono)
-{
-    string soloDigitos = new string(telefono.Where(char.IsDigit).ToArray());
-    return soloDigitos.Length == 10 ? $"{soloDigitos[..3]} {soloDigitos[3..6]} {soloDigitos[6..]}" : telefono;
-}
-
-Dictionary<string, (string pass, bool active)> CargarUsuarios(string ruta)
-{
-    if (!File.Exists(ruta)) File.WriteAllText(ruta, "admin,Admin123*,true\n");
-    return File.ReadAllLines(ruta)
-        .Select(l => l.Split(',')).Where(p => p.Length == 3)
-        .ToDictionary(p => p[0], p => (p[1], bool.Parse(p[2])));
-}
-
-string? AutenticarUsuario(Dictionary<string, (string pass, bool active)> usuarios)
-{
-    int intentos = 0; string? ultimo = null;
-    while (intentos++ < 3)
-    {
-        Console.Write("Username: "); var u = Console.ReadLine();
-        Console.Write("Password: "); var p = Console.ReadLine();
-
-        if (u != null && usuarios.TryGetValue(u, out var data))
-        {
-            if (!data.active) { Console.WriteLine("User blocked."); return null; }
-            if (data.pass == p) return u;
-            ultimo = u;
-        }
-        Console.WriteLine("Invalid credentials.");
-    }
-
-    if (ultimo != null)
-    {
-        var lineas = File.ReadAllLines("Users.txt");
-        for (int i = 0; i < lineas.Length; i++)
-        {
-            var p = lineas[i].Split(',');
-            if (p.Length == 3 && p[0] == ultimo)
-            {
-                lineas[i] = $"{p[0]},{p[1]},false";
-                break;
-            }
-        }
-        File.WriteAllLines("Users.txt", lineas);
-        Console.WriteLine("User has been blocked.");
-    }
-    return null;
+    var digits = new string(phone.Where(char.IsDigit).ToArray());
+    if (digits.Length == 10)
+        return $"{digits[..3]} {digits[3..6]} {digits[6..]}";
+    else
+        return phone;
 }
