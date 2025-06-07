@@ -1,8 +1,8 @@
 ﻿namespace CVSWithoutLibraries;
 
-public class ManualCvsHelper
+public class ManualCsvHelper
 {
-    public void WriteCsv(string path, List<string[]> records)
+    public void WriteCVS(string path, List<string[]> records)
     {
         using var sw = new StreamWriter(path);
         foreach (var record in records)

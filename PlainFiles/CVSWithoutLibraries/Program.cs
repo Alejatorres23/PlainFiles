@@ -10,8 +10,8 @@ var people = new List<string[]>
     new[]{ "5", "Edison", "18" },
 };
 
-var manualCVS = new ManualCvsHelper();
-manualCVS.WriteCsv("people.csv", people);
+var manualCVS = new ManualCsvHelper();
+manualCVS.WriteCVS("people.csv", people);
 var readPeople = manualCVS.ReadCVS("people.csv");
 foreach (var person in readPeople)
 {
